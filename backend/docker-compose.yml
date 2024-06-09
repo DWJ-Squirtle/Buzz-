@@ -1,0 +1,27 @@
+# yaml 配置
+version: "3.7"
+services:
+  redis6016:
+    image: "redis:6.0.16"
+    ports:
+      - "26379:6379"  # 外部端口:内部端口
+  mysql8027:
+    image: "mysql:8.0.27"
+    ports:
+      - "33061:3306"
+    command: "--default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql"  # 初始化命令
+    environment:
+    
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "bluebell-plus"
+      MYSQL_PASSWORD: "123456"
+    volumes:
+      - ./init.sql:/data/application/init.sql
+  bluebell_app:
+    build: .
+    command: sh -c "./wait-for.sh redis6016:6379 mysql8027:3306 -- ./bluebell_app ./conf/config.yaml"
+    depends_on:
+      - mysql8027
+      - redis6016
+    ports:
+      - "8081:8081"
